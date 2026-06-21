@@ -1,0 +1,18 @@
+services:
+  api:
+    build: .
+    container_name: nest-api
+
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - .env
+
+    volumes:
+      - sqlite_data:/app/data
+
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
