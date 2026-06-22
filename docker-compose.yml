@@ -8,6 +8,7 @@ services:
 
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=web"
 
       # Router
       - "traefik.http.routers.demoapi.rule=Host(`demoapi.aclcodesolutions.com`)"
@@ -27,5 +28,7 @@ services:
 
 volumes:
   sqlite_data:
+
 networks:
   web:
+    external: true
