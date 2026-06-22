@@ -9,10 +9,11 @@ export class CitiesService {
   private readonly csvPath: string;
 
   constructor(private readonly csvService: CsvService) {
-    // Resolve CSV path — works in dev (src/assets) and prod (dist/assets)
-    const distPath = join(__dirname, '..', '..', 'assets', 'worldcities.csv');
-    const srcPath = join(process.cwd(), 'src', 'assets', 'worldcities.csv');
-    this.csvPath = existsSync(distPath) ? distPath : srcPath;
+    // Resolve CSV path — try dist/assets first (Docker/prod), then src/assets (dev)
+    const prodPath = join(process.cwd(), 'dist', 'assets', 'worldcities.csv');
+    const devPath  = join(process.cwd(), 'src', 'assets', 'worldcities.csv');
+    console.log('---------------INFO:', prodPath, devPath);
+    this.csvPath = existsSync(prodPath) ? prodPath : devPath;
   }
 
   async getCities(query?: string): Promise<CityRecordDTO[]> {

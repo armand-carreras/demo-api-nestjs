@@ -3,8 +3,19 @@ services:
     build: .
     container_name: nest-api
 
-    ports:
-      - "3000:3000"
+    networks:
+      - web
+
+    labels:
+      - "traefik.enable=true"
+
+      # Router
+      - "traefik.http.routers.demoapi.rule=Host(`demoapi.aclcodesolutions.com`)"
+      - "traefik.http.routers.demoapi.entrypoints=websecure"
+      - "traefik.http.routers.demoapi.tls.certresolver=le"
+
+      # Service
+      - "traefik.http.services.demoapi.loadbalancer.server.port=3000"
 
     env_file:
       - .env
@@ -16,3 +27,5 @@ services:
 
 volumes:
   sqlite_data:
+networks:
+  web:
