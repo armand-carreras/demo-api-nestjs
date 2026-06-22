@@ -1,5 +1,5 @@
 services:
-  api:
+  demoapi:
     build: .
     container_name: nest-api
 

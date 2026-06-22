@@ -12,7 +12,6 @@ export class CitiesService {
     // Resolve CSV path — try dist/assets first (Docker/prod), then src/assets (dev)
     const prodPath = join(process.cwd(), 'dist', 'assets', 'worldcities.csv');
     const devPath  = join(process.cwd(), 'src', 'assets', 'worldcities.csv');
-    console.log('---------------INFO:', prodPath, devPath);
     this.csvPath = existsSync(prodPath) ? prodPath : devPath;
   }
 
