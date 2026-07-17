@@ -6,19 +6,19 @@ import {
   ValidateIf,
 } from 'class-validator';
 
-export class LoginDto {
-  @ValidateIf((o: LoginDto) => !o.email)
+export class VerifyAccountDto {
+  @ValidateIf((o: VerifyAccountDto) => !o.email)
   @IsNotEmpty()
   @IsString()
   @MinLength(3)
   username?: string;
 
-  @ValidateIf((o: LoginDto) => !o.username)
+  @ValidateIf((o: VerifyAccountDto) => !o.username)
   @IsNotEmpty()
   @IsEmail()
   email?: string;
 
   @IsNotEmpty()
   @IsString()
-  password!: string;
+  verification_code!: string;
 }

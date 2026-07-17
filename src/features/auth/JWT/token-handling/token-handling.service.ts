@@ -5,10 +5,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class TokenHandlingService {
-
-  constructor(
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private readonly jwtService: JwtService) {}
 
   async generateAccessToken(jwtDto: JwtDto) {
     return this.jwtService.signAsync(jwtDto, {
@@ -34,15 +31,21 @@ export class TokenHandlingService {
     };
   }
 
-  async hashRefreshToken(token: string) {
-    return bcrypt.hash(token, 12); 
+  hashRefreshToken(token: string): Promise<string> {
+    return bcrypt.hash(token, 12);
   }
 
   async compareHashedTokens(storedHash: string, plaintextToken: string) {
-    return bcrypt.compare(plaintextToken, storedHash);
+    let same = false;
+    try {
+      same = await bcrypt.compare(plaintextToken, storedHash);
+    } catch (error) {
+      throw new Error('Error comparing hashed tokens' + error);
+    }
+    return same;
   }
 
-  async asyncVerifial(token: string) {
-    return this.jwtService.verifyAsync(token,);
+  asyncVerify(token: string) {
+    return this.jwtService.verifyAsync(token);
   }
 }

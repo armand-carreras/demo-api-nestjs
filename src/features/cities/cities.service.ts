@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { CityRecordDTO } from './DTO/city-record-dto.interface';
-import { CsvService } from 'src/common/csv/csv.service';
+import { CsvService } from '../../common/csv/csv.service';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
@@ -11,7 +11,7 @@ export class CitiesService {
   constructor(private readonly csvService: CsvService) {
     // Resolve CSV path — try dist/assets first (Docker/prod), then src/assets (dev)
     const prodPath = join(process.cwd(), 'dist', 'assets', 'worldcities.csv');
-    const devPath  = join(process.cwd(), 'src', 'assets', 'worldcities.csv');
+    const devPath = join(process.cwd(), 'src', 'assets', 'worldcities.csv');
     this.csvPath = existsSync(prodPath) ? prodPath : devPath;
   }
 

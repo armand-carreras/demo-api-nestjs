@@ -11,7 +11,7 @@ jest.mock('../../database/prisma.service');
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../database/prisma.service';
 import { TokenHandlingService } from './JWT/token-handling/token-handling.service';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn(),
@@ -77,7 +77,7 @@ describe('AuthService', () => {
           useValue: {
             generateTokenPair: jest.fn(),
             hashRefreshToken: jest.fn(),
-            asyncVerifial: jest.fn(),
+            asyncVerify: jest.fn(),
           },
         },
       ],
@@ -192,20 +192,18 @@ describe('AuthService', () => {
     const oldRefreshToken = 'old-refresh-token-value';
 
     it('should return a new TokenPair when the refresh token is valid', async () => {
-      tokenService.asyncVerifial.mockResolvedValue({ sub: 1 });
+      tokenService.asyncVerify.mockResolvedValue({ sub: 1 });
       prisma.refreshToken.findMany.mockResolvedValue([mockRefreshTokenRecord]);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       tokenService.generateTokenPair.mockResolvedValue(mockTokenPair);
-      tokenService.hashRefreshToken
-        .mockResolvedValueOnce('$2b$12$hashedNewRefreshToken')
-        .mockResolvedValueOnce('$2b$12$hashedReplacedBy');
+      tokenService.hashRefreshToken.mockResolvedValue('$2b$12$hashedNewRefreshToken');
 
       const result = await authService.refreshTokenLogin(oldRefreshToken);
 
-      expect(tokenService.asyncVerifial).toHaveBeenCalledWith(oldRefreshToken);
+      expect(tokenService.asyncVerify).toHaveBeenCalledWith(oldRefreshToken);
       expect(prisma.refreshToken.update).toHaveBeenCalledWith({
         where: { id: mockRefreshTokenRecord.id },
-        data: { replaced_by: '$2b$12$hashedReplacedBy', revoked: true },
+        data: { replaced_by: '$2b$12$hashedNewRefreshToken', revoked: true },
       });
       expect(prisma.refreshToken.create).toHaveBeenCalledWith({
         data: { token_hash: '$2b$12$hashedNewRefreshToken', user_id: mockRefreshTokenRecord.user_id, expires_at: expect.any(Date) },
@@ -214,13 +212,13 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when the token verification fails', async () => {
-      tokenService.asyncVerifial.mockRejectedValue(new UnauthorizedException('Token expired'));
+      tokenService.asyncVerify.mockRejectedValue(new UnauthorizedException('Token expired'));
       await expect(authService.refreshTokenLogin('bad-token')).rejects.toThrow(UnauthorizedException);
       expect(prisma.refreshToken.findMany).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when no stored tokens match', async () => {
-      tokenService.asyncVerifial.mockResolvedValue({ sub: 1 });
+      tokenService.asyncVerify.mockResolvedValue({ sub: 1 });
       prisma.refreshToken.findMany.mockResolvedValue([mockRefreshTokenRecord]);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       await expect(authService.refreshTokenLogin(oldRefreshToken)).rejects.toThrow(UnauthorizedException);
@@ -228,25 +226,23 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when there are no stored tokens at all', async () => {
-      tokenService.asyncVerifial.mockResolvedValue({ sub: 1 });
+      tokenService.asyncVerify.mockResolvedValue({ sub: 1 });
       prisma.refreshToken.findMany.mockResolvedValue([]);
       await expect(authService.refreshTokenLogin(oldRefreshToken)).rejects.toThrow(UnauthorizedException);
       expect(tokenService.generateTokenPair).not.toHaveBeenCalled();
     });
 
     it('should store a hash in replaced_by (not the raw token)', async () => {
-      tokenService.asyncVerifial.mockResolvedValue({ sub: 1 });
+      tokenService.asyncVerify.mockResolvedValue({ sub: 1 });
       prisma.refreshToken.findMany.mockResolvedValue([mockRefreshTokenRecord]);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       tokenService.generateTokenPair.mockResolvedValue(mockTokenPair);
-      tokenService.hashRefreshToken
-        .mockResolvedValueOnce('$2b$12$hashedNewRefreshToken')
-        .mockResolvedValueOnce('$2b$12$hashedReplacedBy');
+      tokenService.hashRefreshToken.mockResolvedValue('$2b$12$hashedNewRefreshToken');
 
       await authService.refreshTokenLogin(oldRefreshToken);
 
       const updateCall = (prisma.refreshToken.update as jest.Mock).mock.calls[0][0];
-      expect(updateCall.data.replaced_by).toBe('$2b$12$hashedReplacedBy');
+      expect(updateCall.data.replaced_by).toBe('$2b$12$hashedNewRefreshToken');
       expect(updateCall.data.replaced_by).not.toBe(mockTokenPair.refreshToken);
     });
   });
